@@ -121,6 +121,10 @@ class Main(object):
                             action='store_true',
                             help="Set the log level to debug",
                             default=False)
+        parser.add_argument("--passwd",
+                            help="Where to find the password",
+                            choices=['stdin', 'getpass'],
+                            default='getpass')
         self.options = parser.parse_args()
 
         # if debug is passed, set log level to DEBUG
@@ -157,7 +161,10 @@ class Main(object):
         if not username:
             alohomora.die("Oops, don't forget to provide a username")
 
-        password = getpass.getpass()
+        if('getpass' == self._get_config('passwd', 'getpass')):
+            password = getpass.getpass()
+        else:
+            password = sys.stdin.readline().rstrip('\n')
 
         idp_url = self._get_config('idp-url', None)
         if not idp_url:
@@ -168,7 +175,9 @@ class Main(object):
         #
         # Authenticate the user
         #
-        provider = alohomora.req.DuoRequestsProvider(idp_url, auth_method)
+        allow_interactive=('getpass' == self._get_config('passwd', 'getpass'))
+        provider = alohomora.req.DuoRequestsProvider(
+                idp_url, auth_method, allow_interactive=allow_interactive)
         (okay, response) = provider.login_one_factor(username, password)
         assertion = None
 
@@ -218,7 +227,8 @@ class Main(object):
                 selectedrole = alohomora._prompt_for_a_thing(
                     "Please choose the role you would like to assume:",
                     awsroles,
-                    lambda s: format_role(s.split(',')[0], account_map))
+                    lambda s: format_role(s.split(',')[0], account_map),
+                    allow_interactive=('getpass' == self._get_config('passwd', 'getpass')))
 
                 role_arn = selectedrole.split(',')[0]
                 principal_arn = selectedrole.split(',')[1]

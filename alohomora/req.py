@@ -100,14 +100,14 @@ class WebProvider(object):
         raise NotImplementedError()
 
 
-
 class DuoRequestsProvider(WebProvider):
     """A requests-based provider of authentication data"""
     #pylint: disable=too-many-arguments,no-self-use,logging-not-lazy
-    def __init__(self, idp_url, auth_method=None):
+    def __init__(self, idp_url, auth_method=None, allow_interactive=True):
         self.session = None
         self.idp_url = idp_url
         self.auth_method = auth_method
+        self.allow_interactive = allow_interactive
 
     def _validate_u2f_request(self, host, req):
         LOG.debug('req["appId"]: %s, host: %s', req['appId'], host)
@@ -495,7 +495,8 @@ class DuoRequestsProvider(WebProvider):
             device = alohomora._prompt_for_a_thing( #pylint: disable=protected-access
                 'Please select the device you want to authenticate with:',
                 devices,
-                lambda x: x.name
+                lambda x: x.name,
+                allow_interactive = self.allow_interactive
             )
         else:
             device = devices[0]
@@ -526,7 +527,8 @@ class DuoRequestsProvider(WebProvider):
                 if len(factors) > 1:
                     factor_name = alohomora._prompt_for_a_thing( #pylint: disable=protected-access
                         'Please select an authentication method',
-                        factors)
+                        factors,
+                        allow_interactive = self.allow_interactive)
 
                     factor = DuoFactor(factor_name)
                 else:
