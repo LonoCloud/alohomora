@@ -225,7 +225,7 @@ class Main(object):
                 selectedrole = alohomora._prompt_for_a_thing(
                     "Please choose the role you would like to assume:",
                     awsroles,
-                    lambda s: format_role(s.split(',')[0], account_map)),
+                    lambda s: format_role(s.split(',')[0], account_map),
                     allow_interactive=('getpass' == self._get_config('passwd', 'getpass')))
 
                 role_arn = selectedrole.split(',')[0]
